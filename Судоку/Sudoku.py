@@ -92,7 +92,7 @@ class Pole:
     def col_get(self, column, digit): # получить колонку в виде списка для значений digit
         self.kolonka = []
         for i in range(9):
-            self.kolonka.append(self.cell_get(i,column,digit))
+            self.kolonka.append(self.cell_get(i, column, digit))
         return self.kolonka
 
     def col_set(self, column, digit): # записать, точнее стереть цифру и поставить пустое значение во всей колонке в каждую клетку
@@ -121,17 +121,17 @@ class Pole:
             col_end = 9
         return row_st, row_end, col_st, col_end
 
-    def sq_get(self, row, col, digit): # получить квадрат по координатам в виде списка для значений digit
+    def sq_get(self, row, col, digit):  # получить квадрат по координатам в виде списка для значений digit
         self.sq = []
         row_st, row_end, col_st, col_end = self.sq_check(row,col)
         for i in range (row_st,row_end):
-            for ii in range(col_st,col_end):
+            for ii in range(col_st, col_end):
                 self.sq.append(self.cell_get(i, ii, digit))
         return self.sq
 
-    def sq_set(self, row, col, digit): # получить квадрат по координатам в виде списка для значений digit
+    def sq_set(self, row, col, digit):  # получить квадрат по координатам в виде списка для значений digit
         row_st, row_end, col_st, col_end = self.sq_check(row,col)
-        for i in range (row_st,row_end):
+        for i in range (row_st, row_end):
             for ii in range(col_st,col_end):
                 self.cell_set(i, ii, digit)
 
