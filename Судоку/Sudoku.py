@@ -48,6 +48,10 @@ class Pole:
         # записать значение в клетку, если это не нулевое поле, то в вероятные значения цифры
         # записывается прочерк, если ноль, то все вероятные значения обнуляются для этой клетки
         # возвращает False если ошибок нет, либо текстовое сообщение об ошибке (оно же True)
+        if self.cell_check(row, col, znac):
+            print("можно")
+        else:
+            print("нельзя")
         if digit == 0:
             if znac != "-":
                 if self.cell_get(row, col, znac) == "-":
@@ -66,6 +70,16 @@ class Pole:
             else:
                 self.all_pole[row][col].set_cell(digit, znac)
         return False
+
+    def cell_check(self, row, col, digit):
+        # проверка, можно ли в клетку поставить такую цифру, возвращает истину, если можно
+        if digit in self.row_get(row, 0):
+            return False
+        if digit in self.col_get(col, 0):
+            return False
+        if digit in self.sq_get(row, col, 0):
+            return False
+        return True
 
     def cell_clear(self, row, col):  # очистить одну клетку, путем запоминания значений и обновления (создать заново) все поле
         if self.cell_get(row, col, 0) != "-":
@@ -351,7 +365,7 @@ def digit_button():  # нажатие кнопки цифр для ввода ц
         return
     row, col = map(int, pole_button.get().split())
     if dig_bt_var.get() == 0: # если не показываются варианты
-        if knopki[row][col]['text'] != str(dig_bt.get()): #если нажата не та же цифра, что уже стоит в поле
+        if knopki[row][col]['text'] != str(dig_bt.get()) and sp.cell_check(row, col, dig_bt.get()): #если нажата не та же цифра, что уже стоит в поле
             if len(knopki[row][col]['text']) == 1: # если уже стоит цифра, сначала очищаем от нее
                 sp.cell_clear(row, col)
             put_digit(row, col, dig_bt.get())
@@ -478,7 +492,7 @@ def buttons_file_tre(): #нажатие на кнопки запоминания
     buttons_file_all(3, dig_bt_file_tre.get())
     dig_bt_file_tre.set(2)
 
-def buttons_file_all(var, knopka): #нажатие на кнопки запоминания, загрузки и удаления файлов варианта 3
+def buttons_file_all(var, knopka): #нажатие на кнопки запоминания, загрузки и удаления файлов
     global sp
     if knopka == 0:
         file_save(sp, var + 1)
@@ -589,7 +603,7 @@ txt_pole = ""
 lbl_str = tk.StringVar()
 sp = file_open("sudoku.dat") # попытка открыть файл с ранее сохраненной схемой судоку, если есть сохранение, то из него, если нет, то новое поле
 lbl_str.set("Если хотите очистить поле и начать заново, нажмите кнопку"
-            "\n'Очистить все поле'. Схему судоку можно решить поставив"
+            "\n'Очистить все поле'. Схему судоку можно решить, поставив"
             "\nцифры в соответствующие поля. Цифры судоку ставятся с помощью"
             "\nцифровых кнопок справа из первого ряда, второй ряд управляет"
             "\nпоказом вариантов по отдельной цифре")
@@ -674,10 +688,10 @@ lbl_pole = tk.Label(win, textvariable=lbl_str, font=font_small, bg="#e8e9ff").gr
 lbl_btn = tk.Label(win, text="-->\n|\n|\n|\n|\n|\n|\n|\n\nЦифры\n\nдля\n\nввода\n\nв\n\nполе\n\n|\n|\n|\n|\n|\n|\n|\n-->", font=font_small, bg=back_ground_color).grid(row=0, column=9, rowspan=9, stick="nesw")
 lbl_btn1 = tk.Label(win, text="-->\n|\n|\n|\n|\n|\n|\n|\n\nНажмите\nЦифру\nдля\nпоказа\nполя\nтолько\nпо\nней\n\nповторное\nнажатие\nотмена\n\n|\n|\n|\n|\n-->", font=font_small, bg=back_ground_color).grid(row=0, column=11, rowspan=9, stick="nesw")
 
-# bt_dgt_var = tk.IntVar()
-# bt_dgt_var.set(0)
-# tk.Radiobutton(win, text="Ставить цифры", font=font_small, variable=bt_dgt_var, value=0, indicatoron=0, selectcolor="yellow").grid(row=9, column=11, columnspan=2, stick="nesw")
-# tk.Radiobutton(win, text="Ставить варианты", font=font_small, variable=bt_dgt_var, value=1, indicatoron=0, selectcolor="yellow").grid(row=10, column=11, columnspan=2, stick="nesw")
+bt_dgt_var = tk.IntVar()
+bt_dgt_var.set(0)
+tk.Radiobutton(win, text="Ставить цифры", font=font_small, variable=bt_dgt_var, value=0, indicatoron=0, selectcolor="yellow").grid(row=9, column=11, columnspan=2, stick="nesw")
+tk.Radiobutton(win, text="Ставить варианты", font=font_small, variable=bt_dgt_var, value=1, indicatoron=0, selectcolor="yellow").grid(row=10, column=11, columnspan=2, stick="nesw")
 
 win.mainloop()
 
