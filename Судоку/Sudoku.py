@@ -48,10 +48,6 @@ class Pole:
         # записать значение в клетку, если это не нулевое поле, то в вероятные значения цифры
         # записывается прочерк, если ноль, то все вероятные значения обнуляются для этой клетки
         # возвращает False если ошибок нет, либо текстовое сообщение об ошибке (оно же True)
-        # if self.cell_check(row, col, znac):
-        #     print("можно")
-        # else:
-        #     print("нельзя")
         if digit == 0:
             if znac != "-":
                 if self.cell_get(row, col, znac) == "-":
@@ -64,14 +60,20 @@ class Pole:
                 self.col_set(col, znac)
                 self.sq_set(row, col, znac)
             else:
-                print("ошибка, попытка вставить в финальное значение клетки прочерк. должна быть цифра")
+                digit = self.cell_get(row, col, 0)
+                self.all_pole[row][col].set_cell(0, znac)
+                for i in range(1, 10):
+                    if self.cell_check(row, col, i):
+                        self.cell_set(row, col, i, i)
+                    self.row_set(row, digit, digit)
+                    self.col_set(col, digit, digit)
+                    self.sq_set(row, col, digit, digit)
                 return "ошибка, попытка вставить в финальное значение клетки прочерк. должна быть цифра"
         else:
             if znac != "-":
                 if self.cell_check(row, col, znac):
                     self.all_pole[row][col].set_cell(znac, znac)
                 else:
-                    print(f"ошибка, в квадрате, ряду или столбце уже есть цифра {znac}")
                     return f"ошибка, в квадрате, ряду или столбце уже есть цифра {znac}"
             else:
                 self.all_pole[row][col].set_cell(digit, znac)
@@ -87,17 +89,19 @@ class Pole:
             return False
         return True
 
-    def cell_clear(self, row, col):  # очистить одну клетку, путем запоминания значений и обновления (создать заново) все поле
+    def var_rebild(self): # восстановить варианты по поставленной схеме, путем запоминания значений и обновления (создать заново) все поле
+        tmp_pole = []
+        for i in range (9):
+            tmp_pole.append(self.row_get(i, 0))
+        self.__init__()
+        for i in range(9):  # отправляем цифры в судоку, где они ставятся в поле,а лишние элементы возможных чисел удаляются
+            for ii in range(9):
+                if tmp_pole[i][ii] != "-":
+                    self.cell_set(i, ii, 0, tmp_pole[i][ii])
+
+    def cell_clear(self, row, col):  # очистить одну клетку, путем перерасчета вариантов
         if self.cell_get(row, col, 0) != "-":
-            tmp_pole = []
-            for i in range (9):
-                tmp_pole.append(self.row_get(i, 0))
-            tmp_pole[row][col] = "-"
-            self.all_pole = [[Cell() for i in range(9)] for ii in range(9)]
-            for i in range(9):  # отправляем цифры в судоку, где они ставятся в поле,а лишние элементы возможных чисел удаляются
-                for ii in range(9):
-                    if tmp_pole[i][ii] != "-":
-                        self.cell_set(i, ii, 0, tmp_pole[i][ii])
+            self.cell_set(row, col, 0)
 
     def row_get(self, line, digit):  # получить ряд в виде списка для значений digit
         self.row = []
@@ -105,9 +109,9 @@ class Pole:
             self.row.append(self.cell_get(line, i, digit))
         return self.row
 
-    def row_set(self, line, digit):  # записать, точнее стереть цифру и поставить пустое значение во всем ряду в каждую клетку
+    def row_set(self, line, digit, znac="-"):  # записать, точнее стереть цифру и поставить пустое значение во всем ряду в каждую клетку
         for i in range(9):
-            self.cell_set(line, i, digit)
+            self.cell_set(line, i, digit, znac)
 
     def col_get(self, column, digit): # получить колонку в виде списка для значений digit
         self.kolonka = []
@@ -115,9 +119,9 @@ class Pole:
             self.kolonka.append(self.cell_get(i, column, digit))
         return self.kolonka
 
-    def col_set(self, column, digit): # записать, точнее стереть цифру и поставить пустое значение во всей колонке в каждую клетку
+    def col_set(self, column, digit, znac="-"): # записать, точнее стереть цифру и поставить пустое значение во всей колонке в каждую клетку
         for i in range(9):
-            self.cell_set(i, column, digit)
+            self.cell_set(i, column, digit, znac)
 
     @staticmethod
     def sq_check(row, col): # определение координат для вывода всех клеток в квадрате
@@ -149,11 +153,11 @@ class Pole:
                 self.sq.append(self.cell_get(i, ii, digit))
         return self.sq
 
-    def sq_set(self, row, col, digit):  # получить квадрат по координатам в виде списка для значений digit
+    def sq_set(self, row, col, digit, znac="-"):  # получить квадрат по координатам в виде списка для значений digit
         row_st, row_end, col_st, col_end = self.sq_check(row,col)
         for i in range (row_st, row_end):
             for ii in range(col_st,col_end):
-                self.cell_set(i, ii, digit)
+                self.cell_set(i, ii, digit, znac)
 
 def reshenie(vse_pole, try_hlp=False):
     """ алгоритм решения поля судоку. На входе переменная, которая должна содержать объект поле
@@ -354,14 +358,14 @@ def digit_button():  # нажатие кнопки цифр для ввода ц
         text_mes = sp.cell_set(row, col, 0, dbg)
         if text_mes:
             lbl_str.set(text_mes)
-            change_pole()
+            # change_pole()
         else:
-            lbl_str.set(f"Вы поставили цифру {dbg} в клетку {row + 1},{col + 1}\nвнимание! при замене цифры восстанавливаются все варианты")
-            if dig_bt_var.get() != 0:
-                change_pole(dbg)
-            else:
-                change_pole()
-            file_save(sp)
+            lbl_str.set(f"Вы поставили цифру {dbg} в клетку {row + 1},{col + 1}")
+        if dig_bt_var.get() != 0:
+            change_pole(dbg)
+        else:
+            change_pole()
+        file_save(sp)
 
     if pole_button.get() == "":
         lbl_str.set("Внимание! Для внесения цифры в поле сначала \nнадо выбрать клетку на поле")
@@ -377,28 +381,33 @@ def digit_button():  # нажатие кнопки цифр для ввода ц
                     sp.cell_clear(row, col)
                 put_digit(row, col, dig_bt.get())
             else:
-                lbl_str.set("Эту цифру нельзя сюда поставить")
+                lbl_str.set("Эту цифру нельзя сюда поставить\nили она уже стоит в клетке")
         else:
             if sp.cell_get(row, col, 0) == "-":
                 put_digit(row, col, dig_bt.get())
     else: # тут действия, если работаем с вариантами
-        if dig_bt_var.get() == 0: # если не показываются варианты
-            if len(knopki[row][col]['text']) == 1: # если уже стоит цифра то вариант вставить нельзя
-                lbl_str.set("В клетке уже стоит цифра,\nпоэтому вариант невозможно сюда поставить")
-                return
-            else:
-                if sp.cell_get(row, col, dig_bt.get()) == "-": # если надо вернуть цифру вместо прочерка
-                    sp.cell_set(row, col, dig_bt.get(), dig_bt.get())
+        if sp.cell_get(row, col, 0) != "-": # если уже стоит цифра то вариант вставить нельзя
+            lbl_str.set("В клетке уже стоит цифра,\nпоэтому вариант невозможно сюда поставить")
+            return
+        else:
+            if sp.cell_get(row, col, dig_bt.get()) == "-": # если надо вернуть цифру вместо прочерка
+                mesg = sp.cell_set(row, col, dig_bt.get(), dig_bt.get())
+                if mesg:
+                    lbl_str.set(mesg)
+                else:
                     lbl_str.set(f"Вы поставили вариант цифры {dig_bt.get()} в клетку {row + 1},{col + 1}")
-                else: # если убираем подсказку (замена цифры на прочерк)
-                    var_check = set([sp.cell_get(row, col, i) for i in range(1,10)])
-                    if len(var_check) == 2 and dig_bt.get() in var_check:
-                        lbl_str.set("В клетке не может вообще не остаться вариантов,\nклетка без вариантов и цифры является ошибочным решением")
-                        return
-                    sp.cell_set(row, col, dig_bt.get(), "-")
-                    lbl_str.set(f"Вы убрали вариант цифры {dig_bt.get()} из клетки {row + 1},{col + 1}")
+            else: # если убираем подсказку (замена цифры на прочерк)
+                var_check = set([sp.cell_get(row, col, i) for i in range(1,10)])
+                if len(var_check) == 2 and dig_bt.get() in var_check:
+                    lbl_str.set("В клетке не может вообще не остаться вариантов,\nклетка без вариантов и цифры является ошибочным решением")
+                    return
+                sp.cell_set(row, col, dig_bt.get(), "-")
+                lbl_str.set(f"Вы убрали вариант цифры {dig_bt.get()} из клетки {row + 1},{col + 1}")
+            if dig_bt_var.get() == 0: # если не показываются варианты
                 change_pole()
-                file_save(sp)
+            else:
+                change_pole(dig_bt.get())
+            file_save(sp)
     flag = True
     for i in range (9):  # проверка на то, что все цифры заполнены - есть решение
         if "-" in sp.row_get(i, 0):
@@ -428,7 +437,6 @@ def change_pole(*args): # печатает значения и варианты 
                     knopki[i][j]['text'] = tmp_str
             flag = False
 
-
 def digit_button_can(): # отмена ввода числа в ячейку
     if pole_button.get() == "":
         lbl_str.set("Внимание! Для удаления цифры из поля сначала \nнадо выбрать клетку на поле")
@@ -437,12 +445,11 @@ def digit_button_can(): # отмена ввода числа в ячейку
     if sp.cell_get(row, col, 0) == "-":
         lbl_str.set(f"в клетке с координатой {row + 1},{col + 1} и так нет никакой цифры")
     elif dig_bt_var.get() != 0 and knopki[row][col]['text'] == "-":
-        lbl_str.set(
-            f"Вы можете очистить только цифру {dig_bt_var.get()}\nили снимите показ вариантов нажатием на ту же кнопку {dig_bt_var.get()}")
+        lbl_str.set(f"Вы можете очистить только цифру {dig_bt_var.get()}\nили снимите показ вариантов нажатием на ту же кнопку {dig_bt_var.get()}")
         return
     else:
         sp.cell_clear(row, col)
-        lbl_str.set(f"Вы очистили клетку с координатой {row + 1},{col + 1}\nвнимание! при сбросе цифры восстанавливаются все варианты")
+        lbl_str.set(f"Вы очистили клетку с координатой {row + 1},{col + 1}")
         if dig_bt_var.get() != 0:
             knopki[row][col]['font'] = font_small
             change_pole(dig_bt_var.get())
@@ -462,6 +469,14 @@ def digit_button_cls(): # нажатие на кнопку очистить вс
     else:
         lbl_str.set("Сначала отмените режим показа вариантов цифры")
 
+def digit_button_vr(): # обновить варианты по схеме с числами
+    if dig_bt_var.get() == 0: # если не показываются варианты
+        sp.var_rebild()
+        change_pole()
+        file_save(sp)
+        lbl_str.set("Все варианты возможных значений в клетках обновлены\nв соответствии с заполненными цифрами в поле")
+    else:
+        lbl_str.set("Сначала отмените режим показа вариантов цифры")
 
 def digit_button_ras(hlp=False):  #нажатие на кнопку расчета, если аргумент истина то это нажата кнопка помощи
     if dig_bt_var.get() == 0: # если не показываются варианты
@@ -475,11 +490,11 @@ def digit_button_ras(hlp=False):  #нажатие на кнопку расчет
         if rez == 1:
             lbl_str.set("СУДОКУ РЕШЕНО!")
         elif rez == 2:
-            lbl_str.set("пытались решить, но решение не найдено")
+            lbl_str.set("пытались решить, но решение не найдено\nнужно больше цифр или добавьте/уберите варианты")
         elif rez == 3:
-            lbl_str.set("не решено, есть клетки без вариантов, ошибка схемы, решения нет")
+            lbl_str.set("не решено, есть клетки без вариантов,\nвозможна ошибка в схеме заполнения, решения нет")
         elif rez ==4:
-            lbl_str.set("подсказок нет и окончательное решение пока не найдено")
+            lbl_str.set("подсказок нет и окончательное решение пока не найдено\nпоставьте больше цифр или добавьте/уберите варианты")
         change_pole()
         file_save(sp)
     else:
@@ -490,7 +505,6 @@ def file_save(sud_pole, name = 1):  #запись основного поля в
         fn = "sudoku.dat"
     else:
         fn = f"sudokuv{name - 1}.dat"
-
     with open(fn, "wb") as file:
         pk.dump(sud_pole, file, pk.HIGHEST_PROTOCOL)
 
@@ -522,10 +536,12 @@ def buttons_file_all(var, knopka): #нажатие на кнопки запом�
     if knopka == 0:
         file_save(sp, var + 1)
         messagebox.showinfo("Сохранение", f"поле клеток сохранено в варианте {var}")
+        lbl_str.set("поле клеток сохранено")
     elif knopka == 1:
         if messagebox.askyesno(f"загрузка сохранения {var}",
                                "Вы действительно хотите восстановить ранее сохраненный вариант?"):
             sp = file_open(f"sudokuv{var}.dat")
+            lbl_str.set("Загружен ранее сохраненный вариант")
             if dig_bt_var.get() != 0:
                 change_pole(dig_bt_var.get())
             else:
@@ -564,6 +580,9 @@ def press_key(event_full):
                     col = 0
             pole_button.set(f"{row} {col}")
 
+def menu_command():
+    print("кликнуто что-то в меню")
+
 # тут начало программы (после всех определений подпрограмм и классов)
 count_level = 0 # временная для понимания уровня рекурсии
 dig_bt_var_last = "" #для запоминания последней нажатой клавиши вариантов
@@ -578,6 +597,18 @@ back_ground_color = "#a39e9e"
 font_small = ("TkDefaultFont",9)
 font_big = ("TkDefaultFont",20)
 win.geometry(f"{wide}x{high}+{startwide}+{starthigh}")
+
+menu = tk.Menu(win)
+first_item = tk. Menu(menu, tearoff=0)
+one_item = tk.Menu(menu, tearoff=0)
+first_item.add_command(label='Простые', command = menu_command)
+first_item.add_command(label='Средние')
+first_item.add_command(label='Сложные')
+menu.add_cascade(label='Загрузить схему', menu=first_item)
+menu.add_cascade(label='Настройки', menu=one_item)
+one_item.add_command(label='Показывать')
+one_item.add_command(label='Скрыть')
+win.config(menu=menu)
 
 win.resizable(True, True)
 win.minsize(wide, high)
@@ -625,7 +656,6 @@ for i in range(9,12):
     ramka[i].rowconfigure(2, minsize=30, weight=1)
     for j in range(2):
         ramka[i].columnconfigure(j, minsize=45, weight=1)
-
 
 knopki = [[0]*9 for i in range(9)]  # создаем двумерный список для поля кнопок
 txt_pole = ""
@@ -713,7 +743,7 @@ btn_can = tk.Button(win, text="Сброс цифры", command=digit_button_can,
 btn_hlp = tk.Button(win, text="Подсказка", command=digit_button_hlp, font=font_small).grid(row=10, column=9, columnspan=2, stick="nesw")
 btn_ras = tk.Button(win, text="Решить", command=digit_button_ras, font=font_small).grid(row=11, column=9, columnspan=2, stick="nesw")
 btn_cle = tk.Button(ramka[12], text="Новое поле", command=digit_button_cls, font=("TkDefaultFont",8)).grid(row=1, column=0, stick="nesw")
-btn_var = tk.Button(ramka[12], text="Пересчет вар.", command=digit_button_cls, font=("TkDefaultFont",8)).grid(row=2, column=0, stick="nesw")
+btn_var = tk.Button(ramka[12], text="Пересчет вар.", command=digit_button_vr, font=("TkDefaultFont",8)).grid(row=2, column=0, stick="nesw")
 
 lbl_pole = tk.Label(win, textvariable=lbl_str, font=font_small, bg="#e8e9ff").grid(row=9, column=0, columnspan=9, rowspan=2, stick="nesw")
 lbl_btn = tk.Label(win, text="-->\n|\n|\n|\n|\n|\n|\n|\n\nЦифры\n\nдля\n\nввода\n\nв\n\nполе\n\n|\n|\n|\n|\n|\n|\n|\n-->", font=font_small, bg=back_ground_color).grid(row=0, column=9, rowspan=9, stick="nesw")
