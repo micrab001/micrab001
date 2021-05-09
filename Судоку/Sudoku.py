@@ -523,11 +523,11 @@ def buttons_file(): #нажатие на кнопки запоминания и 
     buttons_file_all(1, dig_bt_file_one.get())
     dig_bt_file_one.set(2)
 
-def buttons_file_two(): #нажатие на кнопки запоминания, загрузки и удаления файлов варианта 2
+def buttons_file_two(): #нажатие на кнопки запоминания и загрузки файлов варианта 2
     buttons_file_all(2, dig_bt_file_two.get())
     dig_bt_file_two.set(2)
 
-def buttons_file_tre(): #нажатие на кнопки запоминания, загрузки и удаления файлов варианта 3
+def buttons_file_tre(): #нажатие на кнопки запоминания и загрузки файлов варианта 3
     buttons_file_all(3, dig_bt_file_tre.get())
     dig_bt_file_tre.set(2)
 
@@ -580,8 +580,93 @@ def press_key(event_full):
                     col = 0
             pole_button.set(f"{row} {col}")
 
-def menu_command():
-    print("кликнуто что-то в меню")
+
+def menu_command(name_win):
+    selection = False
+
+    def command_ok(*args):
+        nonlocal selection
+        if messagebox.askyesno(f"Зарузка схемы судоку",
+                               "Вы действительно хотите загрузить новую схему судоку?"
+                               "\nВнимание! Все внесенное ранее в поле судоку будет стерто."):
+            selection = l_listbox.curselection()
+        child.destroy()
+
+    def command_can():
+        child.destroy()
+
+    # создание дочернего окна
+    child = tk.Toplevel(win)
+    child.title(name_win)
+    child.geometry(f'260x520+{win.winfo_x() + 10}+{win.winfo_y() + 10}')  # положение окна на 10 точек смещения от основного окна
+    # действия с окном
+    if name_win == 'Простые':
+        fn = "easy.dat"
+    elif name_win == 'Средние':
+        fn = "medium.dat"
+    elif name_win == 'Сложные':
+        fn = "hard.dat"
+    elif name_win == 'Очень сложные':
+        fn = "very_hard.dat"
+    with open(fn) as file_fielsds:
+        s_fields = file_fielsds.readlines()
+        l_str = [name_win + " №" + str(i) + " " + s_fields[i][:15] + "..." for i in range(len(s_fields))]
+    fr_verx = tk.Frame(child)
+    fr_verx.pack(side=tk.TOP, fill=tk.BOTH)
+    fr_niz = tk.Frame(child)
+    fr_niz.pack(side=tk.BOTTOM, fill=tk.BOTH)
+    # создание виджета со списком со скролбаром справа
+    sb = tk.Scrollbar(fr_verx)
+    sb.pack(side=tk.RIGHT, fill=tk.Y)
+    l_listbox = tk.Listbox(fr_verx, yscrollcommand=sb.set, selectmode=tk.SINGLE, width=50, height=30)
+    # наполнение списка листбокса строчками
+    for line in l_str:
+        l_listbox.insert(tk.END, line)
+    # финальная конфигурация листбокса
+    l_listbox.pack(side=tk.LEFT, fill=tk.BOTH)
+    sb.config(command=l_listbox.yview)
+    l_listbox.selection_set(first=0)
+
+    # создание кнопок
+    bot_ok = tk.Button(fr_niz, text="  ОК  ", width=10, command=command_ok)
+    bot_ok.pack(side=tk.LEFT)
+    bot_can = tk.Button(fr_niz, text="Отмена", width=10, command=command_can)
+    bot_can.pack(side=tk.RIGHT)
+
+    # возможна реакция на указание на строчку мышкой
+    # l_listbox.bind("<<ListboxSelect>>", command_ok)
+    l_listbox.bind('<Double-1>', command_ok)
+    # эти три строчки делают окно модальным, их надо помещять вниз(в конце) команд
+    child.grab_set()
+    child.focus_set()
+    child.wait_window()
+    digits = (s_fields[selection[0]][:-1], selection[0]) if selection else selection
+    if digits:
+        all_pole = [["-" for i in range(9)] for ii in range(9)]
+        for i in range(len(digits[0])):
+            all_pole[i // 9][i % 9] =(int(digits[0][i]) if digits[0][i] != "0" else "-")
+        digit_button_cls()
+        for i in range(9):  # отправляем цифры в судоку, где они ставятся в поле,а лишние элементы возможных чисел удаляются
+            for ii in range(9):
+                if all_pole[i][ii] != "-":
+                    sp.cell_set(i, ii, 0, all_pole[i][ii])
+        change_pole()
+        file_save(sp)
+        lbl_str.set(f"Вы загрузили из списка схему судоку №{selection[0]} сложности '{name_win}'")
+
+
+def menu_command_easy():
+    menu_command("Простые")
+
+def menu_command_medium():
+    menu_command("Средние")
+
+def menu_command_hard():
+    menu_command("Сложные")
+
+def menu_command_vhard():
+    menu_command("Очень сложные")
+
 
 # тут начало программы (после всех определений подпрограмм и классов)
 count_level = 0 # временная для понимания уровня рекурсии
@@ -597,17 +682,14 @@ back_ground_color = "#a39e9e"
 font_small = ("TkDefaultFont",9)
 font_big = ("TkDefaultFont",20)
 win.geometry(f"{wide}x{high}+{startwide}+{starthigh}")
-
+# создание строчки меню
 menu = tk.Menu(win)
 first_item = tk. Menu(menu, tearoff=0)
-one_item = tk.Menu(menu, tearoff=0)
-first_item.add_command(label='Простые', command = menu_command)
-first_item.add_command(label='Средние')
-first_item.add_command(label='Сложные')
-menu.add_cascade(label='Загрузить схему', menu=first_item)
-menu.add_cascade(label='Настройки', menu=one_item)
-one_item.add_command(label='Показывать')
-one_item.add_command(label='Скрыть')
+first_item.add_command(label='Простые', command = menu_command_easy)
+first_item.add_command(label='Средние', command = menu_command_medium)
+first_item.add_command(label='Сложные', command = menu_command_hard)
+first_item.add_command(label='Очень сложные', command = menu_command_vhard)
+menu.add_cascade(label='Загрузить Судоку', menu=first_item)
 win.config(menu=menu)
 
 win.resizable(True, True)
@@ -662,11 +744,11 @@ txt_pole = ""
 # sp = Pole() # создаем поле цифр
 lbl_str = tk.StringVar()
 sp = file_open("sudoku.dat") # попытка открыть файл с ранее сохраненной схемой судоку, если есть сохранение, то из него, если нет, то новое поле
-lbl_str.set("Если хотите очистить поле и начать заново, нажмите кнопку"
-            "\n'Очистить все поле'. Схему судоку можно решить, поставив"
-            "\nцифры в соответствующие поля. Цифры судоку ставятся с помощью"
-            "\nцифровых кнопок справа из первого ряда, второй ряд управляет"
-            "\nпоказом вариантов по отдельной цифре")
+lbl_str.set("Если хотите очистить поле и начать заново, нажмите кнопку 'Очистить"
+            "\nвсе поле'. Схему судоку можно решить, поставив цифры в "
+            "\nсоответствующие поля. Либо загрузите схему для решения из меню. Цифры"
+            "\nсудоку ставятся с помощью цифровых кнопок справа из первого ряда, "
+            "\nвторой ряд управляет показом вариантов по отдельной цифре.")
 pole_button = tk.StringVar()
 for f in range(9):
     for ii in range(3):
