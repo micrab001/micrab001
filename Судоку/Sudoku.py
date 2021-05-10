@@ -414,6 +414,7 @@ def digit_button():  # нажатие кнопки цифр для ввода ц
             flag = False  # если хоть 1 цифры нет
     if flag: # все цифры заполнены - есть решение
         lbl_str.set("СУДОКУ РЕШЕНО!")
+        check_resh_sxema()
     # dig_bt.set(0) # не будет видно нажатия
 
 def change_pole(*args): # печатает значения и варианты во всем поле ячеек
@@ -489,6 +490,7 @@ def digit_button_ras(hlp=False):  #нажатие на кнопку расчет
                 rez = rez[0]
         if rez == 1:
             lbl_str.set("СУДОКУ РЕШЕНО!")
+            check_resh_sxema()
         elif rez == 2:
             lbl_str.set("пытались решить, но решение не найдено\nнужно больше цифр или добавьте/уберите варианты")
         elif rez == 3:
@@ -608,9 +610,16 @@ def menu_command(name_win):
         fn = "hard.dat"
     elif name_win == 'Очень сложные':
         fn = "very_hard.dat"
+    try:
+        with open("resheno.dat", "rb") as fl:
+            s_resh = pk.load(fl)
+    except FileNotFoundError:
+            s_resh = {'easy.dat': [], 'medium.dat': [], 'hard.dat': [], 'very_hard.dat': []}
+            with open("resheno.dat", "wb") as fl:
+                pk.dump(s_resh, fl, pk.HIGHEST_PROTOCOL)
     with open(fn) as file_fielsds:
         s_fields = file_fielsds.readlines()
-        l_str = [name_win + " №" + str(i) + " " + s_fields[i][:15] + "..." for i in range(len(s_fields))]
+        l_str = [name_win + " №" + str(i) + " " + ("решено" if i in s_resh[fn] else s_fields[i][:15]) + "..." for i in range(len(s_fields))]
     fr_verx = tk.Frame(child)
     fr_verx.pack(side=tk.TOP, fill=tk.BOTH)
     fr_niz = tk.Frame(child)
@@ -667,6 +676,35 @@ def menu_command_hard():
 def menu_command_vhard():
     menu_command("Очень сложные")
 
+def check_resh_sxema():
+    spi_resh = ""
+    for i in range(9):
+        for j in range(9):
+            spi_resh += str(sp.cell_get(i, j, 0))
+    file_names = ["easy.dat", "medium.dat", "hard.dat", "very_hard.dat", ]
+    with open("resheno.dat", "rb") as fl:
+        s_resh = pk.load(fl)
+    for fn in file_names:
+        with open(fn) as fl:
+            spisok = map(lambda x: x[:-1], fl.readlines())
+        num_sx = 0
+        for sud in spisok:
+            i = 0
+            flag_entry = True
+            for dig in sud:
+                if dig != "0" and dig != spi_resh[i]:
+                    flag_entry = False
+                    break
+                i += 1
+            if flag_entry:
+                if num_sx not in s_resh[fn]:
+                    s_resh[fn].append(num_sx)
+                break
+            num_sx += 1
+        if flag_entry:
+            break
+    with open("resheno.dat", "wb") as fl:
+        pk.dump(s_resh, fl, pk.HIGHEST_PROTOCOL)
 
 # тут начало программы (после всех определений подпрограмм и классов)
 count_level = 0 # временная для понимания уровня рекурсии
@@ -744,8 +782,8 @@ txt_pole = ""
 # sp = Pole() # создаем поле цифр
 lbl_str = tk.StringVar()
 sp = file_open("sudoku.dat") # попытка открыть файл с ранее сохраненной схемой судоку, если есть сохранение, то из него, если нет, то новое поле
-lbl_str.set("Если хотите очистить поле и начать заново, нажмите кнопку 'Очистить"
-            "\nвсе поле'. Схему судоку можно решить, поставив цифры в "
+lbl_str.set("Если хотите очистить поле и начать заново, нажмите кнопку 'Новое"
+            "\nполе'. Схему судоку можно решить, поставив цифры в "
             "\nсоответствующие поля. Либо загрузите схему для решения из меню. Цифры"
             "\nсудоку ставятся с помощью цифровых кнопок справа из первого ряда, "
             "\nвторой ряд управляет показом вариантов по отдельной цифре.")
