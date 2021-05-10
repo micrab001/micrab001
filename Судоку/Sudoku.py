@@ -71,10 +71,10 @@ class Pole:
                 return "ошибка, попытка вставить в финальное значение клетки прочерк. должна быть цифра"
         else:
             if znac != "-":
-                if self.cell_check(row, col, znac):
+                if self.cell_check(row, col, znac) and self.cell_get(row, col, 0) == "-":
                     self.all_pole[row][col].set_cell(znac, znac)
                 else:
-                    return f"ошибка, в квадрате, ряду или столбце уже есть цифра {znac}"
+                    return f"ошибка, в клетке, квадрате, ряду или столбце уже есть цифра {znac}"
             else:
                 self.all_pole[row][col].set_cell(digit, znac)
         return False
