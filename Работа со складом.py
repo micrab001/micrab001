@@ -461,7 +461,7 @@ for el in result:
 for i in no_col:
     data_sklad.del_col(i)
 # добавить нужные колонки с пустыми значениями в данные со складов
-new_col = ["Номер магазина","Номер Счета", "Код маг", "Код орг", "Проверка", "Код отгрузки", "Паллет в магазине"]
+new_col = ["Номер магазина","Номер Счета", "Код маг", "Код орг", "Проверка", "Код отгрузки", "Паллет в магазине", "Контроль паллет"]
 for i in new_col:
     data_sklad.add_col(i)
 # получаем все номера наших магазинов
@@ -502,7 +502,7 @@ for i in range(len(mag_list_data), 0,-1):
                 data_sklad.cell(i, "Организация", org_list[j])
                 data_sklad.cell(i, "Код орг", int(kompanii.cell(j+1, "orgkey")))
         # начинаем сопоставление отгрузок от склада с данными по отгрузкам из базы
-        pos_elem = 0 # две технические переменные для поиска даты огрузки
+        pos_elem = 0 # две технические переменные для поиска даты отгрузки
         flag_dva = 0
         tmp_list = delivery.get_col("datadoc")
         # Дата отгрузки по складу может отличаться от даты отгрузки по документу на один день, поэтому дату ищем тройным
@@ -530,6 +530,7 @@ for i in range(len(mag_list_data), 0,-1):
                     and not delivery.cell(pos_elem + 1, "use"):
                 data_sklad.cell(i,"Код отгрузки", delivery.cell(pos_elem + 1, "dockey"))
                 data_sklad.cell(i, "Паллет в магазине", delivery.cell(pos_elem + 1, "pmag"))
+                data_sklad.cell(i, "Контроль паллет", data_sklad.cell(i, "Паллет") - data_sklad.cell(i, "Паллет в магазине"))
                 delivery.cell(pos_elem + 1, "use", True)
                 break
             else:
