@@ -312,7 +312,7 @@ strt_time = datetime.date(1900, 1, 1) # объект для конвертаци
 name = lambda n: n.upper().replace(" ","").replace("/","").replace("Ё","Е")
 
 # конвертация даты из строки в число в формат для Excel
-def str_to_data(ds): # предполагается, что формат даты д-м-г
+def str_to_data(ds): # предполагается, что формат даты д-м-г если ошибка то берет г-м-d
     global strt_time
     if isinstance(ds, int):
         return ds
@@ -328,7 +328,10 @@ def str_to_data(ds): # предполагается, что формат дат�
                 dd.append(int(d))
                 d = ""
         dd.append(int(d))
-        return (datetime.date(dd[2] if dd[2]>100 else dd[2]+2000, dd[1], dd[0]) - strt_time).days + 2
+        try:
+            return (datetime.date(dd[2] if dd[2]>100 else dd[2]+2000, dd[1], dd[0]) - strt_time).days + 2
+        except ValueError:
+            return (datetime.date(dd[0] if dd[0]>100 else dd[0]+2000, dd[1], dd[2]) - strt_time).days + 2
 
 # проврка значения и конвертация в целое
 def str_to_int(ds):
