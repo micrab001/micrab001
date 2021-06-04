@@ -1,5 +1,9 @@
 import pandas as pd
 import time
+from os import getcwd
+from tkinter import filedialog
+
+filename = filedialog.askopenfilename(initialdir=getcwd())
 
 start = time.time()
 bin_banks_not_sber = ["417367","422838", "531317","533681","539013", "545182", "446942", "446915", "557029", "557030", "557057", "557071", "557072",
@@ -22,7 +26,7 @@ def convert_bin(val):
     else:
         return "Другой"
 
-df = pd.read_excel(pd.ExcelFile("111.xlsx"), "Sheet0")
+df = pd.read_excel(pd.ExcelFile(filename), "Sheet0")
 for col in df.columns:
     if col not in ['Дата операции', 'Дата выгрузки в АБС', 'Сумма операции',
        'Сумма комиссии', 'Сумма расчета']:
@@ -33,4 +37,4 @@ df.insert(df.columns.get_loc('Продукт')+1,'BIN', df["Номер карт�
 df.to_excel("222.xlsx", sheet_name="Sheet0", index=False)
 
 end = time.time()
-print(f"программа выполнена за {int(end - start)} секунд")
+print(f"программа выполнена за {int(end - start)} секунд, записан файл 222.xlsx")
