@@ -12,8 +12,10 @@ import pandas as pd
 # подпрограммы для диалогового окна и собственно окно для определения переменных
 # year_now - нужный год, по которому выбираются отгрузки
 # subdir - подкаталог, где лежат файлы и одновременно месяц года
+# flag_chk_invoice - проверка на что делаем, ложь - распределение счетов в базе, истина - обработка складских файлов
 subdir = None
 year_now = None
+flag_chk_invoice = True
 
 # открываем доступ к базе данных, считывание данных
 fn = "D:\\Работа\\baza\\kosmbase.mdb"
@@ -101,34 +103,44 @@ def account_to_deliv(mnts, yrnow):
     exit(0)
 
 def digit_button_ent():
-    global subdir, year_now
-    # 1. проверить каталог на наличие файлов
+    global subdir, year_now, flag_chk_invoice
     all_dir = os.listdir(combo_month.get())
     files = [combo_month.get()+chr(92)+f for f in all_dir if os.path.isfile(combo_month.get()+chr(92)+f)]
-    if len(files) == 0:
-        messagebox.showerror("В каталоге нет файлов.", "Проверьте каталог или выберите другой")
-        return
-    # 2. проверить есть ли в каталоге старые файлы
-    for file_name in files:
-        if ".xlsx" not in file_name:
-            messagebox.showerror("Найдены старые файлы" , f"ошибка. файл '{file_name}' надо конвертировать в последний формат .xlsx")
-            return
     subdir = combo_month.get()
+    # 1. проверить каталог на наличие файлов
+    if flag_chk_invoice:
+        if len(files) == 0:
+            messagebox.showerror("В каталоге нет файлов.", "Проверьте каталог или выберите другой")
+            return
+        # 2. проверить есть ли в каталоге старые файлы
+        for file_name in files:
+            if ".xlsx" not in file_name:
+                messagebox.showerror("Найдены старые файлы" , f"ошибка. файл '{file_name}' надо конвертировать в последний формат .xlsx")
+                return
     # 3. проверить правильность ввода года
     if year_pole.get().isdigit():
         if int(year_pole.get()) in range(2019,2030):
             year_now = int(year_pole.get())
         else:
-            messagebox.showerror("Ошибка ввода года", "Год должен быть между 2019 и 2030")
-            return
+            err = "Ошибка ввода года", "Год должен быть между 2019 и 2030"
+            if flag_chk_invoice:
+                messagebox.showerror(err)
+                return
+            else:
+                raise ValueError(err)
     else:
-        messagebox.showerror("Ошибка ввода года", "Год должен состоять из цифр")
-        return
+        err = "Ошибка ввода года", "Год должен состоять из цифр"
+        if flag_chk_invoice:
+            messagebox.showerror(err)
+            return
+        else:
+            raise ValueError(err)
     # 4. закрыть окно и продолжить программу
     win.destroy()
 
 def digit_button_account():
-    global subdir, year_now
+    global subdir, year_now, flag_chk_invoice
+    flag_chk_invoice = False
     digit_button_ent()
     # try:
     account_to_deliv(subdir, year_now)
