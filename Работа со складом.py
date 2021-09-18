@@ -6,6 +6,7 @@ import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
 import pandas as pd
+import win32com.client as win32
 
 
 # ежемесячно задаем начальные параметры для работы
@@ -16,6 +17,9 @@ import pandas as pd
 subdir = None
 year_now = None
 flag_chk_invoice = True
+
+# функция для сравнения строковых переменных, делает все большие и убирает пробелы и слеши из строки
+name = lambda n: n.upper().replace(" ","").replace("/","").replace("Ё","Е")
 
 # открываем доступ к базе данных, считывание данных
 fn = "D:\\Работа\\baza\\kosmbase.mdb"
@@ -90,33 +94,40 @@ def account_to_deliv(mnts, yrnow):
             else: # скорее всего суммы не совпали и счетов было несколько
                 el.append(f"Cчет {row['Numdoc']} не распределен\n")
                 print(f"Cчет {row['Numdoc']} не распределен")
-
             count -= 1
             print(f"Cчет {row['Numdoc']} обработан, осталось {count} счетов")
-
     with open("report.txt", "w", encoding = "UTF-8") as file_to:
         print(*el, file=file_to)
-
     # Завершаем подключение.
     crsr.close()
     cnxn.close()
     exit(0)
 
+# подпрограмма обработка нажатия на кнопку обработки файлов или распределения счетов
 def digit_button_ent():
     global subdir, year_now, flag_chk_invoice
     all_dir = os.listdir(combo_month.get())
     files = [combo_month.get()+chr(92)+f for f in all_dir if os.path.isfile(combo_month.get()+chr(92)+f)]
     subdir = combo_month.get()
     # 1. проверить каталог на наличие файлов
-    if flag_chk_invoice:
+    if flag_chk_invoice: # Если это нажатие на кнопку обработки файлов, а не распределения счетов
         if len(files) == 0:
             messagebox.showerror("В каталоге нет файлов.", "Проверьте каталог или выберите другой")
             return
         # 2. проверить есть ли в каталоге старые файлы
         for file_name in files:
             if ".xlsx" not in file_name:
-                messagebox.showerror("Найдены старые файлы" , f"ошибка. файл '{file_name}' надо конвертировать в последний формат .xlsx")
-                return
+                # если есть старые файлы, они конвертируются в новые, путем обращения непосредственно к Excel
+                # модуль import win32com.client as win32
+                fname = os.getcwd() + chr(92) + file_name
+                excel = win32.gencache.EnsureDispatch('Excel.Application')
+                wb = excel.Workbooks.Open(fname)
+                fname = fname.lower() + "x"
+                wb.SaveAs(fname, FileFormat=51)  # FileFormat = 51 is for .xlsx extension
+                wb.Close()                       # FileFormat = 56 is for .xls extension
+                excel.Application.Quit()
+                os.remove(file_name)
+                print(f"Найдены старые файлы. Файл '{file_name}' конвертирован в последний формат .xlsx")
     # 3. проверить правильность ввода года
     if year_pole.get().isdigit():
         if int(year_pole.get()) in range(2019,2030):
@@ -320,9 +331,6 @@ key_table = '№ п/п' #ключ для клетки с которой начи
 skl = "" #для определения имени склада
 strt_time = datetime.date(1900, 1, 1) # объект для конвертации даты
 
-# функция для сравнения строковых переменных, делает все большие и убирает пробелы и слеши из строки
-name = lambda n: n.upper().replace(" ","").replace("/","").replace("Ё","Е")
-
 # конвертация даты из строки в число в формат для Excel
 def str_to_data(ds): # предполагается, что формат даты д-м-г если ошибка то берет г-м-d
     global strt_time
@@ -371,9 +379,6 @@ all_dir = os.listdir(subdir)
 files = [subdir+chr(92)+f for f in all_dir if os.path.isfile(subdir+chr(92)+f)]
 # перебираем по файлам, беря только с именами складов
 for file_name in files:
-    if ".xlsx" not in file_name:
-        err = f"ошибка. файл '{file_name}' надо конвертировать в последний формат .xlsx"
-        raise ValueError(err)
     for i in sklad:
         if name(i) in name(file_name):
             # readxl returns a pylightxl database that holds all worksheets and its data
@@ -381,7 +386,7 @@ for file_name in files:
             sheets = db.ws_names # получаем список имен листов в файле, если их несколько
             for sheet in sheets:
                 if name("партнеры") in name(sheet): # имя листа должно содержать слово "партнеры"
-                    db.ws(sheet).set_emptycell(val="")
+                    # db.ws(sheet).set_emptycell(val="")
                     # request a semi-structured data (ssd) output
                     # Предполагается, что таблица на листе будет только одна (начинающаяся с заданного ключа)
                     ssd = db.ws(sheet).ssd(keycols=key_table, keyrows=key_table)
