@@ -44,14 +44,63 @@ banks_data = pd.pivot_table(df,index=['BIN', ], values=['Сумма операц
 banks_data["% по сумме"] = round(banks_data["sum"]/banks_data["sum"].sum(), 4)
 banks_data["% по количеству"] = round(banks_data["len"]/banks_data["len"].sum(), 4)
 banks_data.loc['Всего']= banks_data.sum()
-banks_data.rename(columns={'sum': 'Сумма', 'len': 'Количество'}, inplace=True)
-
+banks_data.rename(columns={'sum': 'Сумма операций', 'len': 'Количество операций'}, inplace=True)
+cols = list(banks_data.columns.values)
+cols = [cols[0], cols[2], cols[1], cols[3]]
+banks_data = banks_data[cols]
+new_header = [el[0] for el in cols]
 
 print(f"сделали сводную таблицу, время {int(time.time() - start)}")
 
-with pd.ExcelWriter("222.xlsx") as file_name:
+writer = pd.ExcelWriter("222.xlsx", engine='xlsxwriter')
+with writer as file_name:
     df.to_excel(file_name, sheet_name="Sheet0", index=False)
-    banks_data.to_excel(file_name, sheet_name="banks")
+    # banks_data.to_excel(file_name, sheet_name="banks")
+    # Convert the dataframe to an XlsxWriter Excel object.
+    banks_data.to_excel(file_name, sheet_name="banks", header=False)
+    # Get the xlsxwriter objects from the dataframe writer object.
+    workbook  = writer.book
+    worksheet = writer.sheets["banks"]
+    # Add some cell formats.
+    format1 = workbook.add_format({'num_format': '#,##0'})
+    format2 = workbook.add_format({'num_format': '0%'})
+    header_format = workbook.add_format({
+        'bold': True,
+        'text_wrap': True,
+        'valign': 'top',
+        'fg_color': '#D7E4BC',
+        'border': 1})
+    worksheet.set_row(0, 30, header_format)
+    worksheet.write_row('B1', new_header)
+    # Set the column width and format.
+    worksheet.set_column('B:B', 15, format1)
+    worksheet.set_column('C:C', 10, format2)
+    worksheet.set_column('D:D', 15, format1)
+    worksheet.set_column('E:E', 10, format2)
+
+    # writer.save()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 print(f"записали в файл сводную таблицу, время {int(time.time() - start)}")
 end = time.time()
 print(f"программа выполнена за {int(end - start)} секунд, записан файл 222.xlsx")
