@@ -120,6 +120,16 @@ def digit_button_ent():
                 # если есть старые файлы, они конвертируются в новые, путем обращения непосредственно к Excel
                 # модуль import win32com.client as win32
                 fname = os.getcwd() + chr(92) + file_name
+                # с помощью этого кода можно обойти ошибку, возникающую при запуске екселя
+                # from pathlib import Path
+                # try:
+                #     xl = win32.gencache.EnsureDispatch('Excel.Application')
+                # except AttributeError:
+                #     f_loc = r'C:\Users\micrab\AppData\Local\Temp\gen_py'
+                #     for f in Path(f_loc):
+                #         Path.unlink(f)
+                #     Path.rmdir(f_loc)
+                #     xl = win32.gencache.EnsureDispatch('Excel.Application')
                 excel = win32.gencache.EnsureDispatch('Excel.Application')
                 wb = excel.Workbooks.Open(fname)
                 fname = fname.lower() + "x"
@@ -192,7 +202,7 @@ win.protocol("WM_DELETE_WINDOW", on_closing)
 
 tk.Label(win, text="Надо выбрать месяц (каталог с файлами)", font=font_small, bg="#e8e9ff", anchor="center").pack()
 dirs = [f for f in os.listdir() if os.path.isdir(f) and f.isdigit()]
-dirs = [f for f in dirs if 0 < int(f) < 10]
+dirs = [f for f in dirs if 0 < int(f) < 13]
 combo_month = ttk.Combobox(win, values = dirs, state = "readonly")
 combo_month.pack()
 combo_month.current(dirs.index(max(dirs)))
