@@ -7,7 +7,8 @@ from tkinter import ttk
 from tkinter import messagebox
 import pandas as pd
 import win32com.client as win32
-
+from shutil import rmtree
+from time import sleep
 
 # ежемесячно задаем начальные параметры для работы
 # подпрограммы для диалогового окна и собственно окно для определения переменных
@@ -120,23 +121,29 @@ def digit_button_ent():
                 # если есть старые файлы, они конвертируются в новые, путем обращения непосредственно к Excel
                 # модуль import win32com.client as win32
                 fname = os.getcwd() + chr(92) + file_name
-                # с помощью этого кода можно обойти ошибку, возникающую при запуске екселя
-                # from pathlib import Path
-                # try:
-                #     xl = win32.gencache.EnsureDispatch('Excel.Application')
-                # except AttributeError:
-                #     f_loc = r'C:\Users\micrab\AppData\Local\Temp\gen_py'
-                #     for f in Path(f_loc):
-                #         Path.unlink(f)
-                #     Path.rmdir(f_loc)
-                #     xl = win32.gencache.EnsureDispatch('Excel.Application')
-                excel = win32.gencache.EnsureDispatch('Excel.Application')
+                # с помощью кода ниже можно обойти ошибку, возникающую при запуске екселя
+                # ошибка связана с указанной системной директорией, из которой надо все удалить
+                try:
+                    excel = win32.gencache.EnsureDispatch('Excel.Application')
+                except AttributeError:
+                    f_loc = r'C:\Users\micrab\AppData\Local\Temp\gen_py'
+                    all_dir = os.listdir(f_loc)
+                    if len(all_dir) != 0:
+                        for f in f_loc:
+                            if os.path.isfile(f_loc+chr(92)+f):
+                                os.remove(f_loc+chr(92)+f)
+                            else:
+                                rmtree(f_loc+chr(92)+f)
+                        sleep(5)
+                        excel = win32.gencache.EnsureDispatch('Excel.Application')
+                # excel = win32.gencache.EnsureDispatch('Excel.Application')
                 wb = excel.Workbooks.Open(fname)
                 fname = fname.lower() + "x"
                 wb.SaveAs(fname, FileFormat=51)  # FileFormat = 51 is for .xlsx extension
                 wb.Close()                       # FileFormat = 56 is for .xls extension
                 excel.Application.Quit()
                 os.remove(file_name)
+                sleep(3)
                 print(f"Найдены старые файлы. Файл '{file_name}' конвертирован в последний формат .xlsx")
     # 3. проверить правильность ввода года
     if year_pole.get().isdigit():
