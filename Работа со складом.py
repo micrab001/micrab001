@@ -126,17 +126,17 @@ def digit_button_ent():
                 try:
                     excel = win32.gencache.EnsureDispatch('Excel.Application')
                 except AttributeError:
+                    excel.Application.Quit()
                     f_loc = r'C:\Users\micrab\AppData\Local\Temp\gen_py'
                     all_dir = os.listdir(f_loc)
                     if len(all_dir) != 0:
-                        for f in f_loc:
+                        for f in all_dir:
                             if os.path.isfile(f_loc+chr(92)+f):
                                 os.remove(f_loc+chr(92)+f)
                             else:
                                 rmtree(f_loc+chr(92)+f)
                         sleep(5)
                         excel = win32.gencache.EnsureDispatch('Excel.Application')
-                # excel = win32.gencache.EnsureDispatch('Excel.Application')
                 wb = excel.Workbooks.Open(fname)
                 fname = fname.lower() + "x"
                 wb.SaveAs(fname, FileFormat=51)  # FileFormat = 51 is for .xlsx extension
