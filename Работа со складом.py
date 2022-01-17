@@ -22,6 +22,16 @@ flag_chk_invoice = True
 # функция для сравнения строковых переменных, делает все большие и убирает пробелы и слеши из строки
 name = lambda n: n.upper().replace(" ","").replace("/","").replace("Ё","Е")
 
+# очистка директории, если в ней что-то остается, возникает сбой при попытке конвертировать файлы в 127 строке программы
+f_loc = r'C:\Users\micrab\AppData\Local\Temp\gen_py'
+all_dir = os.listdir(f_loc)
+if len(all_dir) != 0:
+    for f in all_dir:
+        if os.path.isfile(f_loc+chr(92)+f):
+            os.remove(f_loc+chr(92)+f)
+        else:
+            rmtree(f_loc+chr(92)+f)
+
 # открываем доступ к базе данных, считывание данных
 fn = "D:\\Работа\\baza\\kosmbase.mdb"
 conn_str = "DRIVER={Microsoft Access Driver (*.mdb, *.accdb)}; DBQ=" + fn +";"
@@ -77,7 +87,8 @@ def account_to_deliv(mnts, yrnow):
             crsr.execute(sql) # создаем таблицу отгрузок по году, месяцу и компании для сверки их сумм со счетами
             tb_del = pd.DataFrame(list(map(list, crsr.fetchall())), columns=[name[0] for name in crsr.description])
             if len(tb_del) != 1:
-                tb_tmp = tb_del[tb_del['itog'].astype('int32') == int(row['sumdoc'])].reset_index(drop=True) # ищем совпадения по сумме
+                # tb_tmp = tb_del[tb_del['itog'].astype('int32') == int(row['sumdoc'])].reset_index(drop=True) # ищем совпадения по сумме
+                tb_tmp = tb_del[abs(tb_del.itog - int(row['sumdoc'])) <= 3].reset_index(drop=True)
             elif len(tb_del) == 1:
                 tb_tmp = tb_del
             if len(tb_tmp) == 0:
@@ -126,17 +137,18 @@ def digit_button_ent():
                 try:
                     excel = win32.gencache.EnsureDispatch('Excel.Application')
                 except AttributeError:
-                    excel.Application.Quit()
-                    f_loc = r'C:\Users\micrab\AppData\Local\Temp\gen_py'
-                    all_dir = os.listdir(f_loc)
-                    if len(all_dir) != 0:
-                        for f in all_dir:
-                            if os.path.isfile(f_loc+chr(92)+f):
-                                os.remove(f_loc+chr(92)+f)
-                            else:
-                                rmtree(f_loc+chr(92)+f)
-                        sleep(5)
-                        excel = win32.gencache.EnsureDispatch('Excel.Application')
+                    ## excel.Application.Quit()
+                    # f_loc = r'C:\Users\micrab\AppData\Local\Temp\gen_py'
+                    # all_dir = os.listdir(f_loc)
+                    # if len(all_dir) != 0:
+                    #     for f in all_dir:
+                    #         if os.path.isfile(f_loc+chr(92)+f):
+                    #             os.remove(f_loc+chr(92)+f)
+                    #         else:
+                    #             rmtree(f_loc+chr(92)+f)
+                    #     sleep(5)
+                    #     excel = win32.gencache.EnsureDispatch('Excel.Application')
+                    print("очисть вручную каталог " + r"C:\Users\micrab\AppData\Local\Temp\gen_py")
                 wb = excel.Workbooks.Open(fname)
                 fname = fname.lower() + "x"
                 wb.SaveAs(fname, FileFormat=51)  # FileFormat = 51 is for .xlsx extension
