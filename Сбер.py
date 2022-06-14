@@ -8,7 +8,7 @@ filename = filedialog.askopenfilename(initialdir=getcwd())
 start = time.time()
 # это исключения из сбера, хотя они по бинам подходят
 bin_banks_not_sber = ["417367","422838", "431393", "531317", "531344", "533206", "533681", "539013", "545182", "446942", "446915",
-                      "557029", "557030", "557057", "557071", "557072", "557073", "476208", "676261"]
+                      "557029", "557030", "557057", "557071", "557072", "557073", "476208", "676261", "485467", "533616"]
 
 # три цифры, начиная со ВТОРОЙ! здесь коды сбера
 bin_banks = ["006", "173", "228", "274", "276", "279", "308", "313", "332", "336", "369", "381", "390", "451", "469", "479",
@@ -44,7 +44,7 @@ print(f"добавили дату операции в магазине, врем
 df.insert(df.columns.get_loc('Продукт')+1,'BIN', df["Номер карты"].apply(convert_bin))
 print(f"обработали номера карт на предмет карт Сбера, время {int(time.time() - start)}")
 
-banks_data = pd.pivot_table(df,index=['BIN', ], values=['Сумма операции'], aggfunc=[sum,len]) # margins=True
+banks_data = pd.pivot_table(df,index=['BIN'], values=['Сумма операции'], aggfunc=[sum,len]) # margins=True
 banks_data["% по сумме"] = round(banks_data["sum"]/banks_data["sum"].sum(), 4)
 banks_data["% по количеству"] = round(banks_data["len"]/banks_data["len"].sum(), 4)
 banks_data.loc['Всего']= banks_data.sum()
@@ -83,25 +83,6 @@ with writer as file_name:
     worksheet.set_column('E:E', 10, format2)
 
     # writer.save()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

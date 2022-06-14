@@ -5,6 +5,7 @@ import datetime
 import tkinter as tk
 from tkinter import ttk
 from tkinter import messagebox
+from tkinter import filedialog
 import pandas as pd
 import win32com.client as win32
 from shutil import rmtree
@@ -220,8 +221,14 @@ win.config(bg=back_ground_color)  #a39e9e, #757373
 win.protocol("WM_DELETE_WINDOW", on_closing)
 
 tk.Label(win, text="Надо выбрать месяц (каталог с файлами)", font=font_small, bg="#e8e9ff", anchor="center").pack()
+
+dirname = filedialog.askdirectory(initialdir="d:\\OneDrive\\Рабочие документы\\Транспорт\\").replace("/", chr(92))
+os.chdir(dirname)
 dirs = [f for f in os.listdir() if os.path.isdir(f) and f.isdigit()]
 dirs = [f for f in dirs if 0 < int(f) < 13]
+if len(dirs) == 0:
+    print(f"директория {dirname} указана не верно")
+    exit("не найдены каталоги с месяцами")
 combo_month = ttk.Combobox(win, values = dirs, state = "readonly")
 combo_month.pack()
 combo_month.current(dirs.index(max(dirs)))
@@ -586,7 +593,7 @@ for i in range(len(mag_list_data), 0,-1):
 # запись полученной таблицы данных в файл для проверки
 td = data_sklad.all_table()
 sheet = "alldata"
-fn = f"all_month_{subdir}_2021.xlxs"
+fn = f"all_month_{subdir}_{year_now}.xlxs"
 # add a blank worksheet to the db
 # create a black db
 db = xl.Database()
