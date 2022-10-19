@@ -58,26 +58,34 @@ df.insert(df.columns.get_loc('Продукт')+1,'BIN', df["Номер карт�
 
 # проверяем совпадение кодов сбера и исключений по названиям карт от сбера
 df_chk_bin = df[(df["BIN"] == "Другой") & (~df["Продукт"].str.contains("OTHER", regex=False))]
+df_chk_bin = df_chk_bin[~df_chk_bin['Тип операции'].isin(['Отмена', 'Возврат'])]
 if len(df_chk_bin) > 0:
     # добавить в bin сбера коды
     card_numb = df_chk_bin["Номер карты"].tolist()
+    count_new = len(bin_banks)
     for el in card_numb:
         if el[0:2] == "22": # проверка карт мир
             bin_banks.append(el[2:6])
         else:
             bin_banks.append(el[1:4])
+    bin_banks = set(bin_banks)
+    bin_banks = list(bin_banks)
     bin_banks.sort()
-    print(f"Найдено {len(df_chk_bin)} новых кодов BIN Сбера")
+    print(f"Найдено {len(bin_banks)-count_new} новых кодов BIN Сбера")
 else:
     print("Новых кодов BIN Сбера в таблице не найдено")
 
 df_chk_bin = df[(df["BIN"] == "Сбербанк") & (df["Продукт"].str.contains("OTHER", regex=False))]
+df_chk_bin = df_chk_bin[~df_chk_bin['Тип операции'].isin(['Отмена', 'Возврат'])]
 if len(df_chk_bin) > 0:
+    count_new = len(bin_banks_not_sber)
     card_numb = df_chk_bin["Номер карты"].tolist()
     for el in card_numb:
         bin_banks_not_sber.append(el[0:6])
+    bin_banks_not_sber = set(bin_banks_not_sber)
+    bin_banks_not_sber = list(bin_banks_not_sber)
     bin_banks_not_sber.sort()
-    print(f"Найдено {len(df_chk_bin)} новых исключений кодов BIN Сбера")
+    print(f"Найдено {len(bin_banks_not_sber)-count_new} новых исключений кодов BIN Сбера")
 else:
     print("Новых исключений кодов BIN Сбера в таблице не найдено")
 
