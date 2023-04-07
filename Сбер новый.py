@@ -11,7 +11,7 @@ filename = filedialog.askopenfilename(initialdir=getcwd())
 start = time.time()
 
 magazin_baza = {"Галерея": ["Галерея Водолей", 14], "БУМ": ["Марьино БУМ", 132], "Дом 76А": ["Сокол", 104],
-                "Отрадное": ["Отрадное", 59], "Семеновский": ["Семеновский", 194], "Коламбус": ["Пражская", 172],
+                "Отрадное": ["Отрадное", 59], "Семёновская": ["Семеновский", 194], "Коламбус": ["Пражская", 172],
                 "МКАД": ["Вегас", 255], "Планерное": ["Планерная", 251], "Витте Молл": ["Бутово", 310],
                 "Речной": ["Речной", 247], "Зелёный": ["Новогиреево", 301], "Калейдоскоп": ["Сходненская", 343],
                 "Дубравная": ["Митино", 351], "Кунцево": ["Кунцево", 422], "AVENUE": ["Авеню Ю-З", 536],
@@ -169,7 +169,7 @@ for i in range(0, len(all_data_not_sber)):
     querystring = {"bin": f"{all_data_not_sber.loc[i, 'bincode']}"}
     payload = {"bin": f"{all_data_not_sber.loc[i, 'bincode']}"}
     headers = {"content-type": "application/json",
-               "X-RapidAPI-Key": "",
+               "X-RapidAPI-Key": ,
                "X-RapidAPI-Host": "bin-ip-checker.p.rapidapi.com"}
     response = requests.request("POST", url, json=payload, headers=headers, params=querystring)
     new_bin += 1
@@ -182,7 +182,7 @@ for i in range(0, len(all_data_not_sber)):
                     platsystem = "Mir"
                 sql_str = f'INSERT OR REPLACE INTO bincode ("BIN", "Платежная система", "Страна", "Банк-эмитент", "Тип карты", "Категория карты", "Адрес сайта банка")' \
                           f' VALUES ("{answ_text["BIN"]["number"]}", "{platsystem}",' \
-                          f' "{answ_text["BIN"]["country"]["country"]}", "{answ_text["BIN"]["issuer"]["name"]}",' \
+                          f' "{answ_text["BIN"]["country"]["name"]}", "{answ_text["BIN"]["issuer"]["name"]}",' \
                           f' "{answ_text["BIN"]["type"]}", "{answ_text["BIN"]["level"]}", "{answ_text["BIN"]["issuer"]["website"]}");'
                 cur.execute(sql_str)
                 db.commit()
@@ -230,6 +230,8 @@ for i in range(0, len(df)):
         procent = 0.015
     if df.loc[i, 'QR'] != "СБП":
         df.loc[i, "проверка комиссии"] = abs(round(df.loc[i, "Сумма операции"] * procent - df.loc[i, "Сумма комиссии"]))
+    else:
+        df.loc[i, "проверка комиссии"] = abs(round(df.loc[i, "Сумма операции"] * procent * 0.8 - df.loc[i, "Сумма комиссии"]))
 
 # # проверяем совпадение кодов сбера и исключений по названиям карт от сбера
 # df_chk_bin = df[(df["BIN"] == "Другой") & (~df["Продукт"].str.contains("OTHER", regex=False))]
